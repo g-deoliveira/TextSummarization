@@ -222,12 +222,17 @@ def sentenceSelection(lda, dominant_topic_ids, sentence_groups,
     return results_per_docket
 
 
-def main(regulations, lda, dictionary, tokenizer, bigramizer):
+def main(regulations, model):
     # the tokenizer should be the same method used to fit the LDA
     # the bigramizer should be the same method used to fit the LDA
     num_dominant_topics=5
     number_of_sentences=5
     summaries = {}
+    
+    lda = model.lda
+    dictionary = model.dictionary
+    tokenizer = fit.tokenizer
+    bigramizer = model.bigramizer
     
     for docket_id in regulations:
         

@@ -25,13 +25,10 @@ def main(num_topics=15):
     
     regulations, comments = getComments()
     
-    model = fit.fitModel(comments, num_topics, 
-        min_word_count=10, top_most_common_words=10)
-
-    summary_data = sentenceSelectionModel.main(regulations, 
-        model.lda, model.dictionary, fit.tokenizer, model.bigramizer)
-
+    model = fit.fitModel(comments, num_topics)
+    
+    summary_data = sentenceSelectionModel.main(regulations, model)
+    
     displaySummary.showSummaries(summary_data)
 
-    return summary_data, model
 
