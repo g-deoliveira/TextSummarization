@@ -2,33 +2,33 @@
 
 This library generates short, human-readable summaries of documents using topic modelling. The algorithm uses Latent Dirichlet Allocation to identify latent topics throughout a corpus of documents. Then for each individual document, the sentences that reflect the dominant topics are selected and stitched together.
 
-I have provided a set of sample documents in the *example_data* folder and the associated commands are provided in the example.py script. Briefly:
+I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the example.py script. Briefly:
 
 ```python
-    regulations, comments = getComments()
-    
-    model = fit.fitModel(comments, num_topics)
-    
-    summary_data = sentenceSelectionModel.main(regulations, model)
-    
-    displaySummary.showSummaries(summary_data)
+regulations, comments = getComments()
+
+model = fitLDAModel2Corpus.fitModel(comments, num_topics)
+
+summary_data = sentenceSelectionModel.main(regulations, model)
+
+displaySummary.showSummaries(summary_data)
 ```
 
 The document preprocessing, bag-of-words vectorization and LDA computation is done in the `fitLDAModel2Corpus` module. The sentence selection is carried out in `sentenceSelectionModel`. The input variable to the `fitLDAModel2Corpus` module is `comments`, which stores a list of strings that each represent a document, and the number of topics. 
 
 The document preprocessing involves the usual Natural Language Processing steps, including:
-* lemmatization using the NLTK WordNetLemmatizer [here](http://www.nltk.org/api/nltk.stem.html#module-nltk.stem.wordnet) 
-* bi-gramming via Gensim [here](https://radimrehurek.com/gensim/models/phrases.html)
-* removal of stopwords using an augmented version of the NLTK English stopwords corpus [here](http://www.nltk.org/nltk_data/)
+* lemmatization using the NLTK WordNetLemmatizer, [here](http://www.nltk.org/api/nltk.stem.html#module-nltk.stem.wordnet) 
+* bi-gramming via Gensim, [here](https://radimrehurek.com/gensim/models/phrases.html)
+* removal of stopwords using an augmented version of the NLTK English stopwords corpus, [here](http://www.nltk.org/nltk_data/)
 * removal of low and high frequency tokens
 
 I worked on this project while attending the [Insight Data Science Fellowship Program](http://insightdatascience.com/) and used it to create summaries of public feedback on government regulations. Thus the pickled sample files in the *example_data* folder contain public comments on federal regulations that I downloaded from the API at [regulations.gov](https://www.regulations.gov/).
 
-Here are some sample results, for the CPSC-2012-0050 docket. The dominant topics identified by the algorithm are:
+Here are some sample results, for the CPSC-2012-0050 docket. The five dominant topics identified by the algorithm are:
 ```
 13 0 7 10 5
 ```
-The top terms and associated weights for topic 13 are:
+The top ten terms and associated weights for topic 13 are:
 ```
  magnet (0.0209)
  product (0.0145)
