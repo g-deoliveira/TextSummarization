@@ -35,6 +35,15 @@ class fitModel(object):
         input:
           corpus of documents: list of strings
           num_topics: input parameter to LDA
+          min_word_count: if a token has fewer than min_word_count occurences in the entire corpus, 
+                          then it will be pruned from the processed corpus
+          top_most_common_words: if a token is within the top_most_common_words, 
+                                 then it will be pruned from the processed corpus
+          min_row_length: if the number of tokens within a processed document 
+                          is fewer than min_row_length, then the document is excluded
+          max_row_length: if the number of tokens within a processed document 
+                          is greater than max_row_length, then the document is excluded
+          random_state: used for setting the seed of the LDA calculation
         
         This module preprocesses a corpus of documents and runs
         Latent Dirichlet Allocation (LDA) on a corpus of documents.
@@ -77,7 +86,7 @@ class fitModel(object):
 
 
     def __str__(self):
-        description = ("topic model: token length={0:,d}, dictionary length={1:,3}, "
+        description = ("topic model: token length={0:,d}, dictionary length={1:,d}, "
                        "num_topics={2:,d}, min_word_count={3:,d}, "
                        "top_most_common_words={4:,d}, min_row_length={5:,d}, "
                        "max_row_length={6:,d}")
