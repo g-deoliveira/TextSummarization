@@ -27,35 +27,59 @@ def tokenizer(document):
 
 
 class TopicModel(object):
+    '''
+    This module preprocesses a corpus of documents and runs
+    Latent Dirichlet Allocation (LDA) on a corpus of documents.
+    
+    Parameters
+    ----------
+    num_topics: int, default: 100
+        input parameter to LDA
+    
+    min_word_count: int, default: 20
+        if a token has fewer than min_word_count occurences 
+        in the entire corpus, then it will be pruned from the 
+        processed corpus
+    
+    top_most_common_words: int, default: 10
+        if the frequency count of a token in the corpus
+        exceeds top_most_common_words then it is pruned 
+    
+    min_doc_length: int, default: 40
+        if the number of tokens within a processed document 
+        is less than min_doc_length, then the document is excluded
+    
+    max_doc_length: int, default: 1000
+        if the number of tokens within a processed document 
+        is greater than max_doc_length, then the document is excluded
+    
+    random_state: default: None
+        the random seed for the Gensim LDA object
+    
+    Attributes
+    ----------
+    bigramizer: 
+        the trained Gensim bigramizer
+    
+    tokens: 
+        list of list of strings
+    
+    dictionary: 
+        mapping from id to token
+    
+    corpus: 
+        bag of words vectorization of the tokens
+    
+    lda: 
+        the Gensim LDA object
+      
+    dominant_topic_ids: 
+        list of dominant topic ids, in decreasing order of dominance
+    '''
 
     def __init__(self, num_topics=100, min_word_count=20, 
                  top_most_common_words=10, min_doc_length=40, 
                  max_doc_length=1000, random_state=None):
-        '''
-        parameters:
-          num_topics: input parameter to LDA
-          min_word_count: if a token has fewer than min_word_count occurences 
-                          in the entire corpus, then it will be pruned from the 
-                          processed corpus
-          top_most_common_words: if the frequency count of a token in the corpus
-                                 exceeds top_most_common_words then it is pruned 
-          min_doc_length: if the number of tokens within a processed document 
-                          is less than min_doc_length, then the document is excluded
-          max_doc_length: if the number of tokens within a processed document 
-                          is greater than max_doc_length, then the document is excluded
-        
-        This module preprocesses a corpus of documents and runs
-        Latent Dirichlet Allocation (LDA) on a corpus of documents.
-        
-        attributes:
-          bigramizer: the trained Gensim bigramizer
-          tokens: list of list of strings
-          dictionary: mapping from id to token
-          corpus: bag of words vectorization of the tokens
-          lda: the Gensim LDA object
-          dominant_topic_ids: list of dominant topic ids, in decreasing 
-                              order of dominance
-        '''
         self.num_topics = num_topics
         self.min_word_count = min_word_count
         self.top_most_common_words = top_most_common_words
@@ -93,10 +117,10 @@ class TopicModel(object):
 
 
     def __str__(self):
-        description = ("topic model: token length={0:,d}, dictionary length={1:,d}, "
-                       "num_topics={2:,d}, min_word_count={3:,d}, "
-                       "top_most_common_words={4:,d}, min_doc_length={5:,d}, "
-                       "max_doc_length={6:,d}")
+        description = ("topic model:\n\ttoken length = {0:,d}\n\tdictionary length = {1:,d}"
+                       "\n\tnum_topics = {2:,d}\n\tmin_word_count = {3:,d}"
+                       "\n\ttop_most_common_words = {4:,d}\n\tmin_doc_length = {5:,d}"
+                       "\n\tmax_doc_length = {6:,d}")
         return description.format(len(self.tokens), 
                                   len(self.dictionary),
                                   self.num_topics, 

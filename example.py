@@ -1,7 +1,8 @@
 import pickle
-from fitLDAModel2Corpus import TopicModel
-import sentenceSelectionModel
-import displaySummary 
+from topicModel import TopicModel
+from documentSummaries import DocumentSummaries
+#import sentenceSelectionModel
+#import displaySummary 
 
 
 def getFederalDockets():
@@ -28,9 +29,9 @@ def main(num_topics=15):
     topicModel = TopicModel(num_topics)
     topicModel.fit(comments)
     
-    
-    summary_data = sentenceSelectionModel.main(regulations, topicModel)
-    
-    displaySummary.showSummaries(summary_data)
-
+    for docket_id, document in regulations.iteritems():
+        docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3)
+        docSummaries.summarize(document)
+        print docket_id
+        docSummaries.display()
 
