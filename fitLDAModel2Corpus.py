@@ -26,48 +26,55 @@ def tokenizer(document):
     return tokens
 
 
-class fitModel(object):
+class TopicModel(object):
 
-    def __init__(self, documents, num_topics=100, min_word_count=20, 
-                 top_most_common_words=10, min_row_length=40, 
-                 max_row_length=1000, random_state=None):
+    def __init__(self, num_topics=100, min_word_count=20, 
+                 top_most_common_words=10, min_doc_length=40, 
+                 max_doc_length=1000, random_state=None):
         '''
-        input:
-          corpus of documents: list of strings
+        parameters:
           num_topics: input parameter to LDA
-          min_word_count: if a token has fewer than min_word_count occurences in the entire corpus, 
-                          then it will be pruned from the processed corpus
-          top_most_common_words: if a token is within the top_most_common_words, 
-                                 then it will be pruned from the processed corpus
-          min_row_length: if the number of tokens within a processed document 
-                          is fewer than min_row_length, then the document is excluded
-          max_row_length: if the number of tokens within a processed document 
-                          is greater than max_row_length, then the document is excluded
-          random_state: used for setting the seed of the LDA calculation
+          min_word_count: if a token has fewer than min_word_count occurences 
+                          in the entire corpus, then it will be pruned from the 
+                          processed corpus
+          top_most_common_words: if the frequency count of a token in the corpus
+                                 exceeds top_most_common_words then it is pruned 
+          min_doc_length: if the number of tokens within a processed document 
+                          is less than min_doc_length, then the document is excluded
+          max_doc_length: if the number of tokens within a processed document 
+                          is greater than max_doc_length, then the document is excluded
         
         This module preprocesses a corpus of documents and runs
         Latent Dirichlet Allocation (LDA) on a corpus of documents.
         
-        output:
-          the trained Gensim bigramizer
-          the tokens (list of list of strings)
-          the dictionary (id to token mapping)
-          the corpus (bag of words vectorization of the tokens)
-          the Gensim LDA object
-          the dominant topic ids (list, decreasing order of dominance)
+        attributes:
+          bigramizer: the trained Gensim bigramizer
+          tokens: list of list of strings
+          dictionary: mapping from id to token
+          corpus: bag of words vectorization of the tokens
+          lda: the Gensim LDA object
+          dominant_topic_ids: list of dominant topic ids, in decreasing 
+                              order of dominance
         '''
         self.num_topics = num_topics
         self.min_word_count = min_word_count
         self.top_most_common_words = top_most_common_words
         
-        assert max_row_length > min_row_length, \
-               "max_row_length must be greater than min_row_length"
-        self.min_row_length = min_row_length
-        self.max_row_length = max_row_length
+        assert max_doc_length > min_doc_length, \
+               "max_doc_length must be greater than min_doc_length"
+        self.min_doc_length = min_doc_length
+        self.max_doc_length = max_doc_length
+        self.random_state = random_state
         
         # natural language processing
         self.stop_words = self.getEnglishStopWords()
-        self.bigramizer = Phrases()#min_count = min_word_count)
+        self.bigramizer = Phrases()
+        
+    def fit(self, documents):
+        '''
+        parameters:
+          documents: list of strings, each represents a document
+        '''
         
         # tokens, dictionary, corpus for LDA
         self.tokens = self.preProcessCorpus(documents)
@@ -77,9 +84,9 @@ class fitModel(object):
         self.lda = self.getLDA(dictionary=self.dictionary, 
                                corpus=self.corpus, 
                                num_topics=self.num_topics, 
-                               random_state=random_state)
+                               random_state=self.random_state)
         
-        self.num_dominant_topics=min(10, num_topics)
+        self.num_dominant_topics=min(10, self.num_topics)
         self.dominant_topic_ids = self.getDominantTopics(self.corpus, 
                                                          self.lda, 
                                                          self.num_dominant_topics)
@@ -88,15 +95,15 @@ class fitModel(object):
     def __str__(self):
         description = ("topic model: token length={0:,d}, dictionary length={1:,d}, "
                        "num_topics={2:,d}, min_word_count={3:,d}, "
-                       "top_most_common_words={4:,d}, min_row_length={5:,d}, "
-                       "max_row_length={6:,d}")
+                       "top_most_common_words={4:,d}, min_doc_length={5:,d}, "
+                       "max_doc_length={6:,d}")
         return description.format(len(self.tokens), 
                                   len(self.dictionary),
                                   self.num_topics, 
                                   self.min_word_count, 
                                   self.top_most_common_words, 
-                                  self.min_row_length, 
-                                  self.max_row_length)
+                                  self.min_doc_length, 
+                                  self.max_doc_length)
 
     @staticmethod
     def getEnglishStopWords():
@@ -157,38 +164,37 @@ class fitModel(object):
 
 
     def preProcessCorpus(self, documents, min_word_count=None, 
-                         top_most_common_words=None, min_row_length=None, 
-                         max_row_length=None):
+                         top_most_common_words=None, min_doc_length=None, 
+                         max_doc_length=None):
         '''
         this function pre-processes the documents and converts them into a list of list of tokens
         
         input: 
           documents: a list of strings (each string represents a document)
-          min_word_count: if a token has fewer than min_word_count occurences in the entire corpus, 
-                          then it will be pruned from the processed corpus
-          top_most_common_words: if a token is within the top_most_common_words, 
-                                 then it will be pruned from the processed corpus
-          min_row_length: if the number of tokens within a processed document 
-                          is fewer than min_row_length, then the document is excluded
-          max_row_length: if the number of tokens within a processed document 
-                          is greater than max_row_length, then the document is excluded
+          min_word_count: if the frequency count of a token in the corpus is less 
+                          than min_word_count then it is pruned
+          top_most_common_words: if the frequency count of a token in the corpus
+                                 exceeds top_most_common_words then it is pruned 
+          min_doc_length: if the number of tokens within a processed document 
+                          is less than min_doc_length, then the document is excluded
+          max_doc_length: if the number of tokens within a processed document 
+                          is greater than max_doc_length, then the document is excluded
         output:
           a list of list of tokens
-          the trained Gensim bigram model which concatenates bigrams, eg "New_York"
         '''
         if min_word_count is None:
             min_word_count = self.min_word_count
         if top_most_common_words is None:
             top_most_common_words = self.top_most_common_words
-        if min_row_length is None:
-            min_row_length = self.min_row_length
-        if max_row_length is None:
-            max_row_length = self.max_row_length
+        if min_doc_length is None:
+            min_doc_length = self.min_doc_length
+        if max_doc_length is None:
+            max_doc_length = self.max_doc_length
         
         tokens = [tokenizer(document) for document in documents]
         
-        # exclude comments that are longer than max_row_length
-        tokens = [tkn for tkn in tokens if len(tkn) < max_row_length]
+        # exclude comments that are longer than max_doc_length
+        tokens = [tkn for tkn in tokens if len(tkn) < max_doc_length]
         
         # train Gensim Phrases model for bigrams
         self.bigramizer.add_vocab(tokens)
@@ -199,8 +205,8 @@ class fitModel(object):
         # exclude stop words
         tokens = [[t for t in tkn if t not in self.stop_words] for tkn in tokens]
         
-        # exclude tokens that are shorter than min_row_length
-        tokens = [tkn for tkn in tokens if len(tkn) > min_row_length]
+        # exclude tokens that are shorter than min_doc_length
+        tokens = [tkn for tkn in tokens if len(tkn) > min_doc_length]
         
         # calculate token frequencies to exclude low and high frequency tokens
         freqs = self.getFrequencies(tokens)
@@ -210,13 +216,13 @@ class fitModel(object):
         tokens =  [[t for t in tkn if t not in low_freq_tokens] for tkn in tokens]
         tokens =  [[t for t in tkn if t not in high_freq_tokens] for tkn in tokens]
         
-        print '\nnumber of low frequency tokens pruned = {:d}'\
+        print '\nnumber of low frequency tokens pruned = {:,d}'\
               .format(len(low_freq_tokens))
-        print 'min_word_count = {:d}, top_most_common_words = {:d}'\
+        print 'min_word_count = {:d}, top_most_common_words = {:,d}'\
               .format(min_word_count, top_most_common_words)
-        print 'number of high frequency tokens pruned = {:d}'\
+        print 'number of high frequency tokens pruned = {:,d}'\
               .format(len(high_freq_tokens))
-        print 'tokens = {:d} rows'.format(len(tokens))
+        print 'tokens = {:,d} rows'.format(len(tokens))
         return tokens
 
 

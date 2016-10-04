@@ -1,5 +1,5 @@
 import pickle
-import fitLDAModel2Corpus as fit
+from fitLDAModel2Corpus import TopicModel
 import sentenceSelectionModel
 import displaySummary 
 
@@ -25,9 +25,11 @@ def main(num_topics=15):
     
     regulations, comments = getComments()
     
-    model = fit.fitModel(comments, num_topics)
+    topicModel = TopicModel(num_topics)
+    topicModel.fit(comments)
     
-    summary_data = sentenceSelectionModel.main(regulations, model)
+    
+    summary_data = sentenceSelectionModel.main(regulations, topicModel)
     
     displaySummary.showSummaries(summary_data)
 
