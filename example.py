@@ -25,9 +25,9 @@ def main(num_topics=15):
     
     topicModel = TopicModel(num_topics)
     topicModel.fit(comments)
-    
+
     for docket_id, document in regulations.iteritems():
-        docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3)
+        docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3, number_of_sentences=4)
         docSummaries.summarize(document)
         print docket_id
         docSummaries.display()

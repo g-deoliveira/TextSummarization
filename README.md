@@ -1,37 +1,39 @@
 # Extractive Text Summarization Using Topic Modelling
 
-This library generates short, human-readable summaries of documents using topic modelling. The algorithm uses Latent Dirichlet Allocation to identify latent topics throughout a corpus of documents. Then for each individual document, the sentences that reflect the dominant topics are selected and stitched together.
+This library generates short, human-readable summaries of documents using topic modelling. It is geared towards creating summaries of corpuses of relatively short documents, such as comments on proposed government regulations, or online product reviews. The algorithm uses Latent Dirichlet Allocation to identify the dominant topics, then identifies sentences that reflect those topics and stitches them together.
 
-I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the example.py script. Briefly, the following reads the sample data and outputs a dictionary `regulations` that stores a document id and corresponding set of documents (list of strings), and corpus is a list of all documents:
+The library consists of two main scripts: `topicModel.py` and `documentSummaries.py`. I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the `example.py` script. Briefly, the following reads the sample data and outputs a dictionary `regulations` and a list `comments`. The dictionary stores document identifiers and the corresponding list of documents, and `comments` stores the corresponding corpus of documents, ie a list that containing the union of all documents.
 
 ```python
 regulations, comments = getComments()
 ```
 
-Using scikit-learn style syntax, we now initialize the topic model and then fit it to the corpus of comments to compute the dominant topics:
+Using scikit-learn style syntax, you initialize the topic model and fit it to the corpus of comments to compute the dominant topics:
 
 ```python
 topicModel = TopicModel(num_topics=3)
 topicModel.fit(comments)
 ```
 
-The document preprocessing, bag-of-words vectorization and LDA computation is done in the `TopicModel` module. Specifically, the following steps are carried out:
+The `TopicModel` object reads, preprocesses and vectorizes the list of documents, performs the LDA computation and computes the dominant topics. Specifically, the following text pre-processing steps are carried out:
+* stripping out punctuation and non-alphabetical characters
+* tokenization
 * lemmatization using the NLTK WordNetLemmatizer, [here](http://www.nltk.org/api/nltk.stem.html#module-nltk.stem.wordnet) 
-* bi-gramming via Gensim, [here](https://radimrehurek.com/gensim/models/phrases.html)
+* bi-grammization via Gensim, [here](https://radimrehurek.com/gensim/models/phrases.html)
 * removal of stopwords using an augmented version of the NLTK English stopwords corpus, [here](http://www.nltk.org/nltk_data/)
 * removal of low and high frequency tokens
+* removal of documents that are too short and too long
 
-Once the dominant topics have been computed, summaries are computed from documents as follows:
+Once the dominant topics have been computed, summaries are computed for provided documents as follows:
 
 ```python
 # generate and display the computed summary for each regulation
 for docket_id, document in regulations.iteritems():
-    docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3)
+    docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3, number_of_sentences=4)
     docSummaries.summarize(document)
     print docket_id
     docSummaries.display()
 ```
-
 
 I worked on this project while attending the [Insight Data Science Fellowship Program](http://insightdatascience.com/) and used it to create summaries of public feedback on government regulations. Thus the pickled sample files in the *example_data* folder contain public comments on federal regulations that I downloaded from the API at [regulations.gov](https://www.regulations.gov/).
 
