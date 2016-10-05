@@ -1,9 +1,6 @@
 import pickle
 from topicModel import TopicModel
 from documentSummaries import DocumentSummaries
-#import sentenceSelectionModel
-#import displaySummary 
-
 
 def getFederalDockets():
     dockets = ['APHIS-2006-0044','CPSC-2012-0050', 

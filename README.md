@@ -2,25 +2,36 @@
 
 This library generates short, human-readable summaries of documents using topic modelling. The algorithm uses Latent Dirichlet Allocation to identify latent topics throughout a corpus of documents. Then for each individual document, the sentences that reflect the dominant topics are selected and stitched together.
 
-I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the example.py script. Briefly:
+I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the example.py script. Briefly, the following reads the sample data and outputs a dictionary `regulations` that stores a document id and corresponding set of documents (list of strings), and corpus is a list of all documents:
 
 ```python
 regulations, comments = getComments()
-
-model = fitLDAModel2Corpus.fitModel(comments, num_topics)
-
-summary_data = sentenceSelectionModel.main(regulations, model)
-
-displaySummary.showSummaries(summary_data)
 ```
 
-The document preprocessing, bag-of-words vectorization and LDA computation is done in the `fitLDAModel2Corpus` module. The sentence selection is carried out in `sentenceSelectionModel`. The input variable to the `fitLDAModel2Corpus` module is `comments`, which stores a list of strings that each represent a document, and the number of topics. 
+Using scikit-learn style syntax, we now initialize the topic model and then fit it to the corpus of comments to compute the dominant topics:
 
-The document preprocessing involves the usual Natural Language Processing steps, including:
+```python
+topicModel = TopicModel(num_topics=3)
+topicModel.fit(comments)
+```
+
+The document preprocessing, bag-of-words vectorization and LDA computation is done in the `TopicModel` module. Specifically, the following steps are carried out:
 * lemmatization using the NLTK WordNetLemmatizer, [here](http://www.nltk.org/api/nltk.stem.html#module-nltk.stem.wordnet) 
 * bi-gramming via Gensim, [here](https://radimrehurek.com/gensim/models/phrases.html)
 * removal of stopwords using an augmented version of the NLTK English stopwords corpus, [here](http://www.nltk.org/nltk_data/)
 * removal of low and high frequency tokens
+
+Once the dominant topics have been computed, summaries are computed from documents as follows:
+
+```python
+# generate and display the computed summary for each regulation
+for docket_id, document in regulations.iteritems():
+    docSummaries = DocumentSummaries(topicModel, num_dominant_topics=3)
+    docSummaries.summarize(document)
+    print docket_id
+    docSummaries.display()
+```
+
 
 I worked on this project while attending the [Insight Data Science Fellowship Program](http://insightdatascience.com/) and used it to create summaries of public feedback on government regulations. Thus the pickled sample files in the *example_data* folder contain public comments on federal regulations that I downloaded from the API at [regulations.gov](https://www.regulations.gov/).
 
