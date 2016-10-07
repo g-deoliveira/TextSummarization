@@ -15,16 +15,16 @@ topicModel = TopicModel(num_topics=3)
 topicModel.fit(comments)
 ```
 
-The `TopicModel` object reads, preprocesses and vectorizes the list of documents, performs the LDA computation and computes the dominant topics. Specifically, the following text pre-processing steps are carried out:
+The `TopicModel` object reads, preprocesses and vectorizes the list of documents, performs the LDA computation and identifies the dominant topics. Specifically, the following pre-processing steps are carried out on the text:
 * stripping out punctuation and non-alphabetical characters
 * tokenization
 * lemmatization using the NLTK WordNetLemmatizer, [here](http://www.nltk.org/api/nltk.stem.html#module-nltk.stem.wordnet) 
 * bi-grammization via Gensim, [here](https://radimrehurek.com/gensim/models/phrases.html)
 * removal of stopwords using an augmented version of the NLTK English stopwords corpus, [here](http://www.nltk.org/nltk_data/)
 * removal of low and high frequency tokens
-* removal of documents that are too short and too long
+* removal of documents that are too short and too long (this step is specifically geared towards public feedback or product reviews)
 
-Once the dominant topics have been computed, summaries are computed for provided documents as follows:
+Once the dominant topics have been identified, summaries are computed for provided documents as follows:
 
 ```python
 # generate and display the computed summary for each regulation
@@ -34,6 +34,17 @@ for docket_id, document in regulations.iteritems():
     print docket_id
     docSummaries.display()
 ```
+The DocumentSummaries.summarize method performs the following steps to extract the sumaries for a given topic id :
+<ol>
+<li> Pass the individual comments in the document to the LDA object to determine the distribution of topics for each comment.
+<li> Filter out the topics whose dominant topic is not equal to the given topic id. What is left is a subset of topics that reflect the given topic.
+<li> For each comment within this subset:
+<ol> Split the comment up into sentences, using the NLTK sentence tokenizer, [here](http://www.nltk.org/nltk_data)
+<li> Feed the sentences to the LDA object to determine the topic distribution of each sentence.
+<li> Filter out the sentences whose dominant topic is not equal to the given topic id, as well as sentences that are too short or sentences that are too long. What is left is a subset of sentences that reflect the given topic.
+</ol>
+</ol>
+
 
 I worked on this project while attending the [Insight Data Science Fellowship Program](http://insightdatascience.com/) and used it to create summaries of public feedback on government regulations. Thus the pickled sample files in the *example_data* folder contain public comments on federal regulations that I downloaded from the API at [regulations.gov](https://www.regulations.gov/).
 
