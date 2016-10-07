@@ -95,19 +95,16 @@ class DocumentSummaries(object):
         tokens = [self.bigramizer[tkn] for tkn in tokens]
         corpus = [self.dictionary.doc2bow(tkn) for tkn in tokens]
             
-        self.dominant_topic_ids = self.dominantTopics(corpus)
+        self.dominant_topic_ids = self.getDominantTopics(corpus)
             
-        sentence_groups = self.splitIntoSentences(documents)
+        self.sentence_groups = self.splitIntoSentences(documents)
             
-        self.distributions = self.sentenceDistributions(sentence_groups, 
-                self.dictionary, self.lda)
+        self.distributions = self.getSentenceDistributions()
             
-        self.summary_data = self.sentenceSelection(self.lda, self.dominant_topic_ids, 
-            sentence_groups, self.distributions, self.dictionary, 
-            self.num_dominant_topics, self.number_of_sentences, False)
+        self.summary_data = self.sentenceSelection(verbose=False)
             
     
-    def dominantTopics(self, corpus):
+    def getDominantTopics(self, corpus):
     
         # get topic weight matrix using lda.inference
         # the matrix has dimensions (num documents) x (num topics)
@@ -124,6 +121,7 @@ class DocumentSummaries(object):
         dominant_topic_ids = dominant_topic_ids[::-1]
         
         return dominant_topic_ids.tolist()
+
     
     def splitIntoSentences(self, documents, MIN_SENTENCE_LENGTH = 8, MAX_SENTENCE_LENGTH = 25):
         # splits a document into sentences. Discards sentences that are too short or too long.
@@ -149,16 +147,16 @@ class DocumentSummaries(object):
         return sentence_groups
     
     
-    def sentenceDistributions(self, sentence_groups, dictionary, lda):
+    def getSentenceDistributions(self):
         # computes topic distributions for each sentence
         # output: list of lists
         # each list corresponds to a document and stores a tuple per sentence
         # the 1st element is the sentence number in the group
         # the 2nd element is a tuple of (topic_id, weight)
         distributions = list()
-        get_bow = dictionary.doc2bow
-        get_document_topics = lda.get_document_topics
-        for sentences in sentence_groups:
+        get_bow = self.dictionary.doc2bow
+        get_document_topics = self.lda.get_document_topics
+        for sentences in self.sentence_groups:
             sentence_distributions = list()
             for k, sentence in sentences:
                 tkns = tokenizer(sentence)
@@ -180,21 +178,18 @@ class DocumentSummaries(object):
         return distributions
     
     
-    def sentenceSelection(self, lda, dominant_topic_ids, sentence_groups, 
-                          distributions, dictionary, num_dominant_topics=5, 
-                          number_of_sentences=5, verbose=False):
+    def sentenceSelection(self, verbose=False):
         
         results_per_docket = dict()
-        results_per_docket['number_of_documents'] = len(sentence_groups)
-        results_per_docket['dominant_topic_ids'] = dominant_topic_ids
+        results_per_docket['number_of_documents'] = len(self.sentence_groups)
+        results_per_docket['dominant_topic_ids'] = self.dominant_topic_ids
         
-        for dtid in dominant_topic_ids:
+        for dtid in self.dominant_topic_ids:
             results_per_topic = dict()
             
-            top_sentences = self.sentencesPerTopic(dtid, sentence_groups, distributions, 
-                                              dictionary, number_of_sentences)
+            top_sentences = self.sentencesPerTopic(dtid)
             
-            topic_terms = lda.show_topic(dtid)
+            topic_terms = self.lda.show_topic(dtid)
             terms = [t[0] for t in topic_terms]
             weights = [w[1] for w in topic_terms]
             
@@ -209,12 +204,11 @@ class DocumentSummaries(object):
         return results_per_docket
 
 
-    def sentencesPerTopic(self, dominant_topic_id, sentence_groups, 
-                          distributions, dictionary, number_of_sentences):
+    def sentencesPerTopic(self, dominant_topic_id):
         
         # get only the document/sentence numbers that are dominated
         # by the dominant topic
-        filtered_by_topic_id = self.filterSentencesByTopic(distributions, dominant_topic_id)
+        filtered_by_topic_id = self.filterSentencesByTopic(dominant_topic_id)
         
         # if the filtered list finds no sentences, move on
         # this event is highly unlikely so this is bad!!
@@ -228,23 +222,23 @@ class DocumentSummaries(object):
         similarity_list = list()
         top_sentences = list()
         
-        while (len(top_sentences) < number_of_sentences and sn < len(distributions)):
+        while (len(top_sentences) < self.number_of_sentences and sn < len(self.distributions)):
             
             filtered_by_sn = [f for f in filtered_by_topic_id if f[1] == sn]
             sorted_by_weight = sorted(filtered_by_sn, key=lambda x: x[2], reverse=True)
             
             if len(sorted_by_weight) == 0:
-                if sn == len(distributions) - 1:
+                if sn == len(self.distributions) - 1:
                     print 'No results in filtered set for sentence:', sn
                 sn += 1
                 continue
             
             document_id = sorted_by_weight[0][0]
-            passage = sentence_groups[document_id]
+            passage = self.sentence_groups[document_id]
             sentence = [p[1] for p in passage if p[0] == sn]
             assert len(sentence) == 1
             sentence = sentence[0]
-            sentence_bow = dictionary.doc2bow(tkns for tkns in sentence.lower().split())
+            sentence_bow = self.dictionary.doc2bow(tkns for tkns in sentence.lower().split())
             sentence_bow = dict(sentence_bow)
 
             if cosineSimilarity(sentence_bow, similarity_list):
@@ -255,14 +249,14 @@ class DocumentSummaries(object):
             sn += 1
         return top_sentences
     
-    def filterSentencesByTopic(self, distributions, topic_id):
+    def filterSentencesByTopic(self, topic_id):
         # get only the document/sentence numbers in distributions
         # that match the given topic_id
         #
         # the output is a list of triplets:
         # (document number, sentence number, weight)
         filtered_by_topic_id = list()
-        for k, distribution in enumerate(distributions):
+        for k, distribution in enumerate(self.distributions):
             filtered = [d for d in distribution if d[1][0] == topic_id]
             for item in filtered:
                 filtered_by_topic_id.append((k, item[0], item[1][1]))
