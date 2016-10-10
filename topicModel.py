@@ -42,8 +42,8 @@ class TopicModel(object):
         processed corpus
     
     top_most_common_words: int, default: 10
-        if the frequency count of a token in the corpus
-        exceeds top_most_common_words then it is pruned 
+        prune tokens that are within the top_most_common_words 
+        throughout the entire corpus 
     
     min_doc_length: int, default: 40
         if the number of tokens within a processed document 
@@ -247,12 +247,14 @@ class TopicModel(object):
         print 'number of high frequency tokens pruned = {:,d}'\
               .format(len(high_freq_tokens))
         print 'tokens = {:,d} rows'.format(len(tokens))
+        print 'text pre-processing is complete\n'
         return tokens
 
 
     def getLDA(self, dictionary=None, corpus=None, num_topics=None, 
                random_state=None):
         # get LDA for dictionary_all and corpus_all
+        print 'computing LDA...'
         
         if dictionary is None:
             dictionary = self.dictionary
@@ -264,12 +266,14 @@ class TopicModel(object):
         lda = models.ldamodel.LdaModel(corpus=corpus, 
                                        alpha='auto', 
                                        id2word=dictionary, 
-                                       num_topics=num_topics)
+                                       num_topics=num_topics,
+                                       random_state=random_state)
         return lda
 
 
     def getDominantTopics(self, corpus, lda, num_dominant_topics=None):
         
+        print 'computing dominant topics...'
         if corpus is None:
             corpus = self.corpus
         if lda is None:
