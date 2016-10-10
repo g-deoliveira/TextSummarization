@@ -5,7 +5,7 @@ This library generates short, human-readable summaries of documents using topic 
 The library consists of two main scripts: `topicModel.py` and `documentSummaries.py`. I have provided a set of sample documents in the `example_data` folder and the associated commands are provided in the `example.py` script. Briefly, the following reads the sample data and outputs a dictionary `regulations` and a list `comments`. The dictionary stores document identifiers and the corresponding list of documents, and `comments` stores the corresponding corpus of documents, ie a list that containing the union of all documents.
 
 ```python
-regulations, comments = getComments()
+regulations, comments = getComments() 
 ```
 
 Using scikit-learn style syntax, you initialize the topic model and fit it to the corpus of comments to compute the dominant topics:
@@ -34,12 +34,13 @@ for docket_id, document in regulations.iteritems():
     print docket_id
     docSummaries.display()
 ```
-The DocumentSummaries.summarize method performs the following steps to extract the sumaries for a given topic id :
+The `DocumentSummaries.summarize` method performs the following steps to extract the sumaries for a given topic id :
 <ol>
 <li> Pass the individual comments in the document to the LDA object to determine the distribution of topics for each comment.
 <li> Filter out the topics whose dominant topic is not equal to the given topic id. What is left is a subset of topics that reflect the given topic.
 <li> For each comment within this subset:
-<ol> Split the comment up into sentences, using the NLTK sentence tokenizer, [here](http://www.nltk.org/nltk_data)
+<ol> 
+<li> Split the comment up into sentences, using the NLTK sentence tokenizer, [here](http://www.nltk.org/api/nltk.tokenize.html#module-nltk.tokenize.punkt)
 <li> Feed the sentences to the LDA object to determine the topic distribution of each sentence.
 <li> Filter out the sentences whose dominant topic is not equal to the given topic id, as well as sentences that are too short or sentences that are too long. What is left is a subset of sentences that reflect the given topic.
 </ol>
@@ -87,7 +88,7 @@ In the mean time, more information can be found on a deck, [here](http://comment
 
 ## Dependencies
 
-* [Gensim:](https://github.com/RaRe-Technologies/gensim) `pip install -U gensim`
+* [Gensim:](https://github.com/RaRe-Technologies/gensim) `pip install -U gensim` (version >= 0.13.2)
 * [nltk:](http://www.nltk.org/) `run sudo pip install -U nltk`
   * `sudo python -m nltk.downloader -d /usr/share/nltk_data punkt`
   * `sudo python -m nltk.downloader -d /usr/share/nltk_data stopwords`
